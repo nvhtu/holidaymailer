@@ -25,6 +25,7 @@ namespace HolidayMailer
         public MainWindow()
         {
             InitializeComponent();
+            Console.WriteLine("asdfdsfsfasfasfsf");
         }
 
         private void letterTextBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -71,6 +72,7 @@ namespace HolidayMailer
         private void cancelEditBttn_Click(object sender, RoutedEventArgs e)
         {
             editContactGrid.Visibility = Visibility.Hidden;
+            
         }
     }
 }

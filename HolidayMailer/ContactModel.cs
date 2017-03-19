@@ -33,6 +33,12 @@ namespace HolidayMailer
             set { _lnSort = value; }
         }
 
+        public int Id
+        {
+            get { return _id; }
+            set { _id = value; }
+        }
+
         public string LName
         {
             get { return _lname; }

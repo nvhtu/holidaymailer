@@ -16,6 +16,7 @@ namespace HolidayMailer
         private ContactDatabase _contactDb;
         private ObservableCollection<ContactModel> _contactList = new ObservableCollection<ContactModel>();
         private ContactModel _selectedContact;
+        private ContactModel _backupSelectedContact;
         private ICollectionView _contactListView;
         private string _sortSelection;
         private SQLiteConnection _dbConn;
@@ -32,7 +33,9 @@ namespace HolidayMailer
             ContactList = GetContactList();
             ContactListView = CollectionViewSource.GetDefaultView(_contactList);
             LetterFilter = "All letters";
+            _backupSelectedContact = ContactList.First();
             SelectedContact = ContactList.First();
+
         }
 
         public ObservableCollection<ContactModel> GetContactList()
@@ -49,14 +52,14 @@ namespace HolidayMailer
             string query = "SELECT * FROM contact ORDER BY " + tempSort;
             SQLiteCommand sqlCmd = new SQLiteCommand(query, _dbConn);
             SQLiteDataReader sqlReader = sqlCmd.ExecuteReader();
-            while(sqlReader.Read())
+            while (sqlReader.Read())
             {
                 bool temp;
                 if (sqlReader.GetValue(4).Equals("0"))
                     temp = false;
                 else
                     temp = true;
-                ContactModel contact = new ContactModel(Convert.ToInt32(sqlReader.GetValue(0)),(string)sqlReader.GetValue(1), (string)sqlReader.GetValue(2), (string)sqlReader.GetValue(3), temp);
+                ContactModel contact = new ContactModel(Convert.ToInt32(sqlReader.GetValue(0)), (string)sqlReader.GetValue(1), (string)sqlReader.GetValue(2), (string)sqlReader.GetValue(3), temp);
                 contactList.Add(contact);
             }
 
@@ -66,7 +69,7 @@ namespace HolidayMailer
 
         public ObservableCollection<ContactModel> ContactList
         {
-            get {return _contactList; }
+            get { return _contactList; }
             set
             {
                 if (value != _contactList)
@@ -82,10 +85,10 @@ namespace HolidayMailer
             get { return CollectionViewSource.GetDefaultView(_contactList); }
             set
             {
-               
-                    _contactListView = value;
-                    OnPropertyChanged("ContactListView");
-                
+
+                _contactListView = value;
+                OnPropertyChanged("ContactListView");
+
             }
         }
 
@@ -95,14 +98,19 @@ namespace HolidayMailer
             set
             {
                 _selectedContact = value;
-                if(_selectedContact != null)
+
+                
+
+                if (_selectedContact != null)
                 {
+                    CopyContact(_selectedContact,_backupSelectedContact);
                     ContactName = _selectedContact.ToString();
                     ContactFName = _selectedContact.FName;
                     ContactLName = _selectedContact.LName;
                     ContactEmail = _selectedContact.Email;
+                    ContactDidSend = _selectedContact.DidSend;
                 }
-                
+
             }
         }
 
@@ -115,11 +123,21 @@ namespace HolidayMailer
             }
         }
 
+        public int ContactId
+        {
+            get { return SelectedContact.Id; }
+            set
+            {
+
+            }
+        }
+
         public string ContactLName
         {
             get { return SelectedContact.LName; }
             set
             {
+                SelectedContact.LName = value;
                 OnPropertyChanged("ContactLName");
             }
         }
@@ -129,6 +147,7 @@ namespace HolidayMailer
             get { return SelectedContact.FName; }
             set
             {
+                SelectedContact.FName = value;
                 OnPropertyChanged("ContactFName");
             }
         }
@@ -138,9 +157,21 @@ namespace HolidayMailer
             get { return SelectedContact.Email; }
             set
             {
+                SelectedContact.Email = value;
                 OnPropertyChanged("ContactEmail");
             }
         }
+
+        public bool ContactDidSend
+        {
+            get { return SelectedContact.DidSend; }
+            set
+            {
+                SelectedContact.DidSend = value;
+                OnPropertyChanged("ContactDidSend");
+            }
+        }
+
 
         public string SortSelection
         {
@@ -153,7 +184,7 @@ namespace HolidayMailer
                 {
                     SetContactSort(false);
                 }
-                else if(value.Contains("Last Name"))
+                else if (value.Contains("Last Name"))
                 {
                     SetContactSort(true);
                 }
@@ -192,21 +223,21 @@ namespace HolidayMailer
                         else
                         {
                             _letterFilter = value.Substring(0, 1);
-                            
+
                         }
                     }
-                    
+
                     OnPropertyChanged("LetterFilter");
                     FilterContactList();
                 }
             }
         }
 
-#region Commands
+        #region Commands
 
         private void FilterContactList()
         {
-            if(_letterFilter.Contains("All"))
+            if (_letterFilter.Contains("All"))
             {
                 ContactListView.Filter = (item) => { return true; };
             }
@@ -221,12 +252,40 @@ namespace HolidayMailer
                     ContactListView.Filter = (item) => { return (item as ContactModel).FName.ToLower().StartsWith(_letterFilter); };
                 }
             }
-            
-            
+
+
+        }
+
+        private void CopyContact(ContactModel from, ContactModel to)
+        {
+            to.Id = from.Id;
+            to.LNSort = from.LNSort;
+            to.FName = from.FName;
+            to.LName = from.LName;
+            to.Email = from.Email;
+            to.DidSend = from.DidSend;
+        }
+
+        private void CancelEditContactExe()
+        {
+            CopyContact(_backupSelectedContact, _selectedContact);
+            OnPropertyChanged("ContactName");
+            OnPropertyChanged("ContactFName");
+            OnPropertyChanged("ContactLName");
+            OnPropertyChanged("ContactEmail");
+            OnPropertyChanged("ContactDidSend");
+
         }
 
 
-        //public ICommand FilterContactList { get { return new RelayCommand(param => FilterContactList(), param => true); } }
+        public ICommand CancelEditContact
+        {
+            get
+            {
+                
+                return new RelayCommand(CancelEditContactExe);
+            }      
+        }
 
 #endregion
     }

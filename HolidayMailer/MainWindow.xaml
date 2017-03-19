@@ -59,7 +59,20 @@
             <Label x:Name="nameLabel" Content="{Binding ContactName}" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="24"/>
             <Label x:Name="emailLabel" Content="Email:" HorizontalAlignment="Left" Margin="0,42,0,0" VerticalAlignment="Top" FontSize="14"/>
             <Label x:Name="emailDataLabel" Content="{Binding ContactEmail}" HorizontalAlignment="Left" Margin="51,42,0,0" VerticalAlignment="Top" FontSize="14"/>
-            <Label x:Name="didSendDataLabel" Content="{Binding ContactName}" ContentStringFormat="{}{0} did send you a holiday message previous years" HorizontalAlignment="Left" Margin="0,71,0,0" VerticalAlignment="Top" FontSize="14"/>
+            <TextBlock x:Name="didSendDataLabel"  HorizontalAlignment="Left" Margin="6,71,0,0" VerticalAlignment="Top" FontSize="14">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding ContactDidSend}" Value="true">
+                                <Setter Property="Text" Value="{Binding ContactName,StringFormat={}{0} did send you a message previous years}" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding ContactDidSend}" Value="false">
+                                <Setter Property="Text" Value="{Binding ContactName,StringFormat={}{0} did not send you a message previous years}"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
             <Button x:Name="sendMailContactBttn" Content="Send mail" HorizontalAlignment="Left" Margin="77,129,0,0" VerticalAlignment="Top" Width="93"/>
             <Button x:Name="editContactBttn" Content="Edit Contact" HorizontalAlignment="Left" Margin="175,129,0,0" VerticalAlignment="Top" Width="93" Click="editContactBttn_Click"/>
             <Button x:Name="deleteContactBttn" Content="Delete Contact" HorizontalAlignment="Left" Margin="273,129,0,0" VerticalAlignment="Top" Width="93"/>
@@ -70,9 +83,9 @@
             <TextBox x:Name="lnameEditTextBox" HorizontalAlignment="Left" Height="28" Margin="120,10,0,0" TextWrapping="Wrap" Text="{Binding ContactLName}" VerticalAlignment="Top" Width="115" VerticalContentAlignment="Center" FontSize="14"/>
             <Label x:Name="emailEditLabel" Content="Email:" HorizontalAlignment="Left" Margin="0,43,0,0" VerticalAlignment="Top" FontSize="14"/>
             <TextBox x:Name="emailEditTextBox" HorizontalAlignment="Left" Height="28" Margin="51,43,0,0" TextWrapping="Wrap" Text="{Binding ContactEmail}" VerticalAlignment="Top" Width="184" VerticalContentAlignment="Center" FontSize="14"/>
-            <CheckBox x:Name="didSendEidtCheckBox" Content="This person sent me a holiday message previous years" HorizontalAlignment="Left" Margin="6,76,0,0" VerticalAlignment="Top" FontSize="14" Width="361"/>
-            <Button x:Name="saveEditBttn" Content="Save" HorizontalAlignment="Left" Margin="175,129,0,0" VerticalAlignment="Top" Width="93"/>
-            <Button x:Name="cancelEditBttn" Content="Cancel" HorizontalAlignment="Left" Margin="273,129,0,0" VerticalAlignment="Top" Width="93" Click="cancelEditBttn_Click"/>
+            <CheckBox x:Name="didSendEidtCheckBox" IsChecked="{Binding ContactDidSend}" Content="This person sent me a holiday message previous years" HorizontalAlignment="Left" Margin="6,76,0,0" VerticalAlignment="Top" FontSize="14" Width="361"/>
+            <Button x:Name="saveEditBttn" Content="Save" HorizontalAlignment="Left" Margin="175,129,0,0" VerticalAlignment="Top" Width="93" />
+            <Button x:Name="cancelEditBttn" Content="Cancel" HorizontalAlignment="Left" Margin="273,129,0,0" VerticalAlignment="Top" Width="93" Click="cancelEditBttn_Click" Command="{Binding CancelEditContact}"/>
         </Grid>
 
         <Grid x:Name="sendMailGrid" Grid.Column="1" Height="600" Margin="14,60,10,0" VerticalAlignment="Top" Background="White" Visibility="Hidden">
