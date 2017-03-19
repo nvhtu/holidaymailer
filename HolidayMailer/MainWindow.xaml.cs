@@ -12,7 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using System.Data.SQLite;
+
 
 namespace HolidayMailer
 {
@@ -22,15 +22,55 @@ namespace HolidayMailer
     /// 
     public partial class MainWindow : Window
     {
-        private SQLiteConnection dbConn;
         public MainWindow()
         {
             InitializeComponent();
         }
 
-        private void initDb()
+        private void letterTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
+            var textbox = sender as TextBox;
+            textbox.SelectAll();
+        }
 
+        private void letterTextBox_GotFocus(object sender, RoutedEventArgs e)
+        {
+            var textbox = sender as TextBox;
+            textbox.SelectAll();
+        }
+
+        //credit: https://social.msdn.microsoft.com/Forums/vstudio/en-US/564b5731-af8a-49bf-b297-6d179615819f/how-to-selectall-in-textbox-when-textbox-gets-focus-by-mouse-click?forum=wpf
+        private void SelectivelyIgnoreMouseButton(object sender, MouseButtonEventArgs e)
+        {
+            TextBox tb = (sender as TextBox);
+            if (tb != null)
+            {
+                if (!tb.IsKeyboardFocusWithin)
+                {
+                    e.Handled = true;
+                    tb.Focus();
+                }
+            }
+        }
+
+        private void listView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if(editContactGrid.Visibility == Visibility.Visible)
+                editContactGrid.Visibility = Visibility.Hidden;
+
+            contactGrid.Visibility = Visibility.Visible;
+
+            //TODO: show warning if email panel is showing
+        }
+
+        private void editContactBttn_Click(object sender, RoutedEventArgs e)
+        {
+            editContactGrid.Visibility = Visibility.Visible;
+        }
+
+        private void cancelEditBttn_Click(object sender, RoutedEventArgs e)
+        {
+            editContactGrid.Visibility = Visibility.Hidden;
         }
     }
 }
