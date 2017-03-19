@@ -54,6 +54,7 @@ namespace HolidayMailer
             }
         }
 
+
         private void listView_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if(editContactGrid.Visibility == Visibility.Visible)
@@ -67,18 +68,36 @@ namespace HolidayMailer
         private void editContactBttn_Click(object sender, RoutedEventArgs e)
         {
             editContactGrid.Visibility = Visibility.Visible;
+            SetPeopleEnable(false);
         }
 
         private void cancelEditBttn_Click(object sender, RoutedEventArgs e)
         {
             editContactGrid.Visibility = Visibility.Hidden;
-            
+            SetPeopleEnable(true);
+
         }
 
         private void saveEditBttn_Click(object sender, RoutedEventArgs e)
         {
             editContactGrid.Visibility = Visibility.Hidden;
+            SetPeopleEnable(true);
 
         }
+
+        private void newContactTool_Click(object sender, RoutedEventArgs e)
+        {
+            SetPeopleEnable(false);
+            editContactGrid.Visibility = Visibility.Visible;
+        }
+
+        private void SetPeopleEnable(bool flag)
+        {
+            toolBar.IsEnabled = flag;
+            listView.IsEnabled = flag;
+            sortComboBox.IsEnabled = flag;
+            letterTextBox.IsEnabled = flag;
+        }
+
     }
 }

@@ -8,7 +8,7 @@ using System.Collections.ObjectModel;
 using System.Windows.Input;
 using System.ComponentModel;
 using System.Windows.Data;
-
+using System.Windows;
 
 namespace HolidayMailer
 {
@@ -23,6 +23,8 @@ namespace HolidayMailer
         private SQLiteConnection _dbConn;
         private bool _lnSort;
         private string _letterFilter;
+        private bool _toCreateContact;
+        private bool _isInProgress;
 
         public ContactViewModel()
         {
@@ -99,17 +101,20 @@ namespace HolidayMailer
             get { return _selectedContact; }
             set
             {
-                
-                if (value != null && _selectedContact!=null)
-                {
-                    _selectedContact = value;
-                    CopyContact(_selectedContact,_backupSelectedContact);
-                    ContactName = _selectedContact.ToString();
-                    ContactFName = _selectedContact.FName;
-                    ContactLName = _selectedContact.LName;
-                    ContactEmail = _selectedContact.Email;
-                    ContactDidSend = _selectedContact.DidSend;
-                }
+
+                    if (value != null && _selectedContact != null)
+                    {
+                        _selectedContact = value;
+
+                        if (!_toCreateContact)
+                            CopyContact(_selectedContact, _backupSelectedContact);
+
+                        ContactName = _selectedContact.ToString();
+                        ContactFName = _selectedContact.FName;
+                        ContactLName = _selectedContact.LName;
+                        ContactEmail = _selectedContact.Email;
+                        ContactDidSend = _selectedContact.DidSend;
+                    }
 
             }
         }
@@ -274,9 +279,17 @@ namespace HolidayMailer
 
         }
 
-        private void SaveEditContactExe()
+        private void SaveContactExe()
         {
-            _contactDb.SaveEditContact(SelectedContact.Id, SelectedContact);
+            if(!_toCreateContact)
+            {
+                _contactDb.SaveEditContact(SelectedContact.Id, SelectedContact);
+            }
+            else
+            {
+                _contactDb.CreateContact(SelectedContact);
+            }
+            
             CopyContact(SelectedContact, _backupSelectedContact);
             RefreshContactList();
             CopyContact(_backupSelectedContact, SelectedContact);
@@ -284,7 +297,7 @@ namespace HolidayMailer
 
         }
 
-        private bool CanSaveEditContact()
+        private bool CanSaveContact()
         {
             if (ContactFName.Equals("") || ContactLName.Equals("") || ContactEmail.Equals(""))
                 return false;
@@ -322,23 +335,62 @@ namespace HolidayMailer
             OnPropertyChanged("ContactDidSend");
         }
 
-
-        public ICommand CancelEditContact
+        private void SetToCreateContactExe()
         {
-            get
-            {
-                return new RelayCommand(CancelEditContactExe);
-            }      
+            _toCreateContact = true;
+            CopyContact(SelectedContact, _backupSelectedContact);
+            SelectedContact = new ContactModel();
+            _isInProgress = true;
         }
 
-        public ICommand SaveEditContact
+        private void SetToEditContactExe()
         {
-            get
+            _toCreateContact = false;
+            _isInProgress = true;
+        }
+
+        private void DeleteContactExe()
+        {
+            MessageBoxResult result = MessageBox.Show("Are you sure to delete " + ContactName + " contact?", "Delete " + ContactName, MessageBoxButton.YesNo, MessageBoxImage.Warning);
+            if(result == MessageBoxResult.Yes)
             {
-                return new RelayCommand(SaveEditContactExe, CanSaveEditContact);
+                _contactDb.DeleteContact(SelectedContact.Id);
+                RefreshContactList();
+                SelectedContact = ContactList.First();
+                
+            }
+            else
+            {
+                return;
             }
         }
 
-#endregion
+        public ICommand SetToCreateContact
+        {
+            get { return new RelayCommand(SetToCreateContactExe); }
+        }
+
+        public ICommand SetToEditContact
+        {
+            get { return new RelayCommand(SetToEditContactExe); }
+        }
+
+
+        public ICommand CancelEditContact
+        {
+            get { return new RelayCommand(CancelEditContactExe); }      
+        }
+
+        public ICommand SaveContact
+        {
+            get { return new RelayCommand(SaveContactExe, CanSaveContact); }
+        }
+
+        public ICommand DeleteContact
+        {
+            get { return new RelayCommand(DeleteContactExe); }
+        }
+
+        #endregion
     }
 }

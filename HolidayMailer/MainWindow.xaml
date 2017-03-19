@@ -39,11 +39,11 @@
             <ComboBoxItem x:Name="fnameSelect" Content="First Name"/>
         </ComboBox>
         <TextBox x:Name="letterTextBox" Height="22" Margin="0,108,10,0" TextWrapping="Wrap" VerticalAlignment="Top" HorizontalContentAlignment="Right" HorizontalAlignment="Right" Width="75" Text="{Binding LetterFilter, UpdateSourceTrigger=PropertyChanged}" TextChanged="letterTextBox_TextChanged" GotFocus="letterTextBox_GotFocus" PreviewMouseLeftButtonDown="SelectivelyIgnoreMouseButton" />
-        <ListView x:Name="listView" Margin="10,154,10,10" ItemsSource="{Binding ContactListView}" SelectedItem="{Binding SelectedContact}" SelectionChanged="listView_SelectionChanged">
+        <ListView x:Name="listView" Margin="10,154,10,10" ItemsSource="{Binding ContactListView}" SelectedItem="{Binding SelectedContact, Mode=OneWayToSource}" SelectionChanged="listView_SelectionChanged">
             
         </ListView>
         <ToolBar x:Name="toolBar" Margin="0,23,0,0" VerticalAlignment="Top" Grid.ColumnSpan="2" Height="30">
-            <Button x:Name="newContactTool" Content="New Contact"/>
+            <Button x:Name="newContactTool" Content="New Contact" Click="newContactTool_Click" Command="{Binding SetToCreateContact}"/>
             <Button x:Name="newMailTool" Content="New Mail"/>
             <Button x:Name="newMailAllTool" Content="New Mail to All Contacts"/>
             <Button x:Name="newMailPreYearTool" Content="New Mail to Previous Year Senders"/>
@@ -74,8 +74,8 @@
                 </TextBlock.Style>
             </TextBlock>
             <Button x:Name="sendMailContactBttn" Content="Send mail" HorizontalAlignment="Left" Margin="77,129,0,0" VerticalAlignment="Top" Width="93"/>
-            <Button x:Name="editContactBttn" Content="Edit Contact" HorizontalAlignment="Left" Margin="175,129,0,0" VerticalAlignment="Top" Width="93" Click="editContactBttn_Click"/>
-            <Button x:Name="deleteContactBttn" Content="Delete Contact" HorizontalAlignment="Left" Margin="273,129,0,0" VerticalAlignment="Top" Width="93"/>
+            <Button x:Name="editContactBttn" Content="Edit Contact" HorizontalAlignment="Left" Margin="175,129,0,0" VerticalAlignment="Top" Width="93" Click="editContactBttn_Click" Command="{Binding SetToEditContact}"/>
+            <Button x:Name="deleteContactBttn" Content="Delete Contact" HorizontalAlignment="Left" Margin="273,129,0,0" VerticalAlignment="Top" Width="93" Command="{Binding DeleteContact}"/>
         </Grid>
 
         <Grid x:Name="editContactGrid" Grid.Column="1" Height="600" Margin="14,60,10,0" VerticalAlignment="Top" Background="White" Visibility="Hidden">
@@ -84,7 +84,7 @@
             <Label x:Name="emailEditLabel" Content="Email:" HorizontalAlignment="Left" Margin="0,43,0,0" VerticalAlignment="Top" FontSize="14"/>
             <TextBox x:Name="emailEditTextBox" HorizontalAlignment="Left" Height="28" Margin="51,43,0,0" TextWrapping="Wrap" Text="{Binding ContactEmail}" VerticalAlignment="Top" Width="184" VerticalContentAlignment="Center" FontSize="14"/>
             <CheckBox x:Name="didSendEidtCheckBox" IsChecked="{Binding ContactDidSend}" Content="This person sent me a holiday message previous years" HorizontalAlignment="Left" Margin="6,76,0,0" VerticalAlignment="Top" FontSize="14" Width="361"/>
-            <Button x:Name="saveEditBttn" Content="Save" HorizontalAlignment="Left" Margin="175,129,0,0" VerticalAlignment="Top" Width="93" Click="saveEditBttn_Click" Command="{Binding SaveEditContact}"/>
+            <Button x:Name="saveEditBttn" Content="Save" HorizontalAlignment="Left" Margin="175,129,0,0" VerticalAlignment="Top" Width="93" Click="saveEditBttn_Click" Command="{Binding SaveContact}"/>
             <Button x:Name="cancelEditBttn" Content="Cancel" HorizontalAlignment="Left" Margin="273,129,0,0" VerticalAlignment="Top" Width="93" Click="cancelEditBttn_Click" Command="{Binding CancelEditContact}"/>
         </Grid>
 

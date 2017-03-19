@@ -45,7 +45,35 @@ namespace HolidayMailer
 
             _dbConn.Close();
 
+        }
 
+        public void CreateContact(ContactModel contact)
+        {
+            _dbConn = new SQLiteConnection("Data Source=contactdb.sqlite;Version=3;");
+            _dbConn.Open();
+            var insertCmd = new SQLiteCommand(@"INSERT INTO " + tableName + " (lname, fname, email, didsend) VALUES (@lname, @fname, @email, @didsend)", _dbConn);
+            insertCmd.Parameters.Add(new SQLiteParameter("@lname", contact.LName));
+            insertCmd.Parameters.Add(new SQLiteParameter("@fname", contact.FName));
+            insertCmd.Parameters.Add(new SQLiteParameter("@email", contact.Email));
+            if (contact.DidSend)
+                insertCmd.Parameters.Add(new SQLiteParameter("@didsend", 1));
+            else
+                insertCmd.Parameters.Add(new SQLiteParameter("@didsend", 0));
+
+            insertCmd.ExecuteNonQuery();
+
+            _dbConn.Close();
+        }
+
+        public void DeleteContact(int id)
+        {
+            _dbConn = new SQLiteConnection("Data Source=contactdb.sqlite;Version=3;");
+            _dbConn.Open();
+            var deleteCmd = new SQLiteCommand(@"DELETE FROM " + tableName + " WHERE id = @id", _dbConn);
+            deleteCmd.Parameters.Add(new SQLiteParameter("@id", id));
+            deleteCmd.ExecuteNonQuery();
+
+            _dbConn.Close();
         }
     }
 }
