@@ -11,6 +11,7 @@ namespace HolidayMailer
     class ContactDatabase
     {
         private SQLiteConnection _dbConn;
+        private string tableName = "contact";
 
         public ContactDatabase()
         {
@@ -19,11 +20,32 @@ namespace HolidayMailer
                 SQLiteConnection.CreateFile("contactdb.sqlite");
                 _dbConn = new SQLiteConnection("Data Source=contactdb.sqlite;Version=3;");
                 _dbConn.Open();
-                string createTable = "CREATE TABLE contact (id INTEGER PRIMARY KEY, lname VARCHAR(255), fname VARCHAR(255), email VARCHAR(255), didsend VARCHAR(255))";
+                string createTable = "CREATE TABLE " + tableName + " (id INTEGER PRIMARY KEY, lname VARCHAR(255), fname VARCHAR(255), email VARCHAR(255), didsend VARCHAR(255))";
                 SQLiteCommand sqlCmd = new SQLiteCommand(createTable, _dbConn);
                 sqlCmd.ExecuteNonQuery();
                 _dbConn.Close();
             }
+        }
+
+        public void SaveEditContact(int id, ContactModel contact)
+        {
+            _dbConn = new SQLiteConnection("Data Source=contactdb.sqlite;Version=3;");
+            _dbConn.Open();
+            var updateItemCmd = new SQLiteCommand(@"UPDATE " + tableName + " SET lname = @lname, fname = @fname, email = @email, didsend = @didsend WHERE id = @id", _dbConn);
+            updateItemCmd.Parameters.AddWithValue("@id", contact.Id);
+            updateItemCmd.Parameters.AddWithValue("@lname", contact.LName);
+            updateItemCmd.Parameters.AddWithValue("@fname", contact.FName);
+            updateItemCmd.Parameters.AddWithValue("@email", contact.Email);
+            if(contact.DidSend)
+                updateItemCmd.Parameters.AddWithValue("@didsend", 1);
+            else
+                updateItemCmd.Parameters.AddWithValue("@didsend", 0);
+
+            updateItemCmd.ExecuteNonQuery();
+
+            _dbConn.Close();
+
+
         }
     }
 }

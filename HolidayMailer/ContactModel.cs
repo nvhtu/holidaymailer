@@ -17,6 +17,15 @@ namespace HolidayMailer
         private string _email;
         private bool _didSend;
 
+        public ContactModel()
+        {
+            _id = 0;
+            _lname = "";
+            _fname = "";
+            _email = "";
+            _didSend = false;
+        }
+
         public ContactModel(int id, string lname, string fname, string email, bool didSend)
         {
             _id = id;

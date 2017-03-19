@@ -9,6 +9,7 @@ using System.Windows.Input;
 using System.ComponentModel;
 using System.Windows.Data;
 
+
 namespace HolidayMailer
 {
     class ContactViewModel : ObservableObject
@@ -25,17 +26,18 @@ namespace HolidayMailer
 
         public ContactViewModel()
         {
+            _selectedContact = new ContactModel();
+            _backupSelectedContact = new ContactModel();
             _contactDb = new ContactDatabase();
             _lnSort = true;
             //_contactList.Add(new ContactModel("Tu", "Nguyen", "abc@xyz.com", true));
             // _contactList.Add(new ContactModel("Chi", "Tran", "abc@xyz.com", true));
             _dbConn = new SQLiteConnection("Data Source=contactdb.sqlite;Version=3;");
-            ContactList = GetContactList();
-            ContactListView = CollectionViewSource.GetDefaultView(_contactList);
-            LetterFilter = "All letters";
-            _backupSelectedContact = ContactList.First();
+            RefreshContactList();
+            
             SelectedContact = ContactList.First();
-
+            _backupSelectedContact = SelectedContact;
+            LetterFilter = "All letters";
         }
 
         public ObservableCollection<ContactModel> GetContactList()
@@ -82,7 +84,7 @@ namespace HolidayMailer
 
         public ICollectionView ContactListView
         {
-            get { return CollectionViewSource.GetDefaultView(_contactList); }
+            get { return CollectionViewSource.GetDefaultView(ContactList); }
             set
             {
 
@@ -97,12 +99,10 @@ namespace HolidayMailer
             get { return _selectedContact; }
             set
             {
-                _selectedContact = value;
-
                 
-
-                if (_selectedContact != null)
+                if (value != null && _selectedContact!=null)
                 {
+                    _selectedContact = value;
                     CopyContact(_selectedContact,_backupSelectedContact);
                     ContactName = _selectedContact.ToString();
                     ContactFName = _selectedContact.FName;
@@ -190,7 +190,8 @@ namespace HolidayMailer
                 }
 
                 ContactList = GetContactList();
-                ContactListView = CollectionViewSource.GetDefaultView(_contactList);
+                ContactListView = CollectionViewSource.GetDefaultView(ContactList);
+                //SelectedContact = ContactList.First();
             }
         }
 
@@ -269,12 +270,56 @@ namespace HolidayMailer
         private void CancelEditContactExe()
         {
             CopyContact(_backupSelectedContact, _selectedContact);
+            RaiseAllContactChange();
+
+        }
+
+        private void SaveEditContactExe()
+        {
+            _contactDb.SaveEditContact(SelectedContact.Id, SelectedContact);
+            CopyContact(SelectedContact, _backupSelectedContact);
+            RefreshContactList();
+            CopyContact(_backupSelectedContact, SelectedContact);
+            RaiseAllContactChange();
+
+        }
+
+        private bool CanSaveEditContact()
+        {
+            if (ContactFName.Equals("") || ContactLName.Equals("") || ContactEmail.Equals(""))
+                return false;
+            else
+            {
+                try
+                {
+                    //http://stackoverflow.com/a/1374644
+
+                    var addr = new System.Net.Mail.MailAddress(ContactEmail);
+                    return addr.Address == ContactEmail;
+                }
+                catch
+                {
+                    return false;
+                }
+
+            }
+
+        }
+
+        private void RefreshContactList()
+        {
+            ContactList = GetContactList();
+            ContactListView = CollectionViewSource.GetDefaultView(ContactList);
+            
+        }
+
+        private void RaiseAllContactChange()
+        {
             OnPropertyChanged("ContactName");
             OnPropertyChanged("ContactFName");
             OnPropertyChanged("ContactLName");
             OnPropertyChanged("ContactEmail");
             OnPropertyChanged("ContactDidSend");
-
         }
 
 
@@ -282,9 +327,16 @@ namespace HolidayMailer
         {
             get
             {
-                
                 return new RelayCommand(CancelEditContactExe);
             }      
+        }
+
+        public ICommand SaveEditContact
+        {
+            get
+            {
+                return new RelayCommand(SaveEditContactExe, CanSaveEditContact);
+            }
         }
 
 #endregion

@@ -74,5 +74,11 @@ namespace HolidayMailer
             editContactGrid.Visibility = Visibility.Hidden;
             
         }
+
+        private void saveEditBttn_Click(object sender, RoutedEventArgs e)
+        {
+            editContactGrid.Visibility = Visibility.Hidden;
+
+        }
     }
 }
