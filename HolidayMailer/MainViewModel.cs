@@ -9,11 +9,16 @@ using System.Windows.Input;
 using System.ComponentModel;
 using System.Windows.Data;
 using System.Windows;
+using System.Net;
+using System.Net.Mail;
+using System.Windows.Documents;
 
 namespace HolidayMailer
 {
-    class ContactViewModel : ObservableObject
+    class MainViewModel : ObservableObject
     {
+        #region Contact members
+
         private ContactDatabase _contactDb;
         private ObservableCollection<ContactModel> _contactList = new ObservableCollection<ContactModel>();
         private ContactModel _selectedContact;
@@ -24,23 +29,63 @@ namespace HolidayMailer
         private bool _lnSort;
         private string _letterFilter;
         private bool _toCreateContact;
-        private bool _isInProgress;
 
-        public ContactViewModel()
+        #endregion Contact members
+
+        #region Mail members
+
+        private string _fromAddr;
+        private string _toAddr;
+        private string _mailSubject;
+        private string _mailBody;
+        private bool _toAll;
+        private bool _toPreYear;
+        private SmtpClient _mailClient;
+        private List<string> _allRecipientsList;
+        private List<string> _preYearRecipientsList;
+
+        #endregion Mail members
+
+
+        public MainViewModel()
         {
+            #region Contact init
+
             _selectedContact = new ContactModel();
             _backupSelectedContact = new ContactModel();
             _contactDb = new ContactDatabase();
             _lnSort = true;
-            //_contactList.Add(new ContactModel("Tu", "Nguyen", "abc@xyz.com", true));
-            // _contactList.Add(new ContactModel("Chi", "Tran", "abc@xyz.com", true));
             _dbConn = new SQLiteConnection("Data Source=contactdb.sqlite;Version=3;");
             RefreshContactList();
-            
             SelectedContact = ContactList.First();
             _backupSelectedContact = SelectedContact;
             LetterFilter = "All letters";
+
+            #endregion Contact init
+
+
+            #region Mail init
+
+            _fromAddr = "prihaht@gmail.com";
+            _toAddr = "";
+            _mailBody = "";
+            _allRecipientsList = new List<string>();
+            _preYearRecipientsList = new List<string>();
+            GetAllAddrs();
+            GetPreYearAddrs();
+            _mailClient = new SmtpClient("smtp.gmail.com", 587)
+            {
+                UseDefaultCredentials = false,
+                Credentials = new NetworkCredential(_fromAddr, "ht9xgoogle"),
+                EnableSsl = true,
+                DeliveryMethod = SmtpDeliveryMethod.Network
+            };
+
+            #endregion Mail init
+
         }
+
+        #region ContactVM
 
         public ObservableCollection<ContactModel> GetContactList()
         {
@@ -105,7 +150,7 @@ namespace HolidayMailer
                     if (value != null && _selectedContact != null)
                     {
                         _selectedContact = value;
-
+                        
                         if (!_toCreateContact)
                             CopyContact(_selectedContact, _backupSelectedContact);
 
@@ -114,6 +159,8 @@ namespace HolidayMailer
                         ContactLName = _selectedContact.LName;
                         ContactEmail = _selectedContact.Email;
                         ContactDidSend = _selectedContact.DidSend;
+
+                        //ToAddr = ContactEmail;
                     }
 
             }
@@ -340,13 +387,11 @@ namespace HolidayMailer
             _toCreateContact = true;
             CopyContact(SelectedContact, _backupSelectedContact);
             SelectedContact = new ContactModel();
-            _isInProgress = true;
         }
 
         private void SetToEditContactExe()
         {
             _toCreateContact = false;
-            _isInProgress = true;
         }
 
         private void DeleteContactExe()
@@ -392,5 +437,230 @@ namespace HolidayMailer
         }
 
         #endregion
+
+        #endregion Contact
+
+        #region MailVM
+
+
+        public string ToAddr
+        {
+            get { return _toAddr; }
+            set
+            {
+                _toAddr = value;
+                OnPropertyChanged("ToAddr");
+            }
+        }
+
+        public bool ToAll
+        {
+            get { return _toAll; }
+            set
+            {
+                _toAll = value;
+
+                if (value == true)
+                    ToPreYear = false;
+
+                OnPropertyChanged("ToAll");
+            }
+        }
+
+        public bool ToPreYear
+        {
+            get { return _toPreYear; }
+            set
+            {
+                _toPreYear = value;
+
+                if (value == true)
+                    ToAll = false;
+
+                OnPropertyChanged("ToPreYear");
+            }
+        }
+
+        public string MailSubject
+        {
+            get { return _mailSubject; }
+            set
+            {
+                _mailSubject = value;
+                OnPropertyChanged("MailSubject");
+            }
+        }
+
+        public string MailBody
+        {
+            get { return _mailBody; }
+            set
+            {
+               _mailBody = value;
+               OnPropertyChanged("MailBody");
+            }
+        }
+
+        private void ClearSendMailExe()
+        {
+            ToAddr = "";
+            MailSubject = "";
+            MailBody = "";
+            
+        }
+
+        public ICommand ClearSendMail
+        {
+            get { return new RelayCommand(ClearSendMailExe); }
+        }
+
+        private void SetMailTo1Exe()
+        {
+            ToAll = false;
+            ToPreYear = false;
+            ToAddr = "";
+        }
+
+        public ICommand SetMailTo1
+        {
+            get { return new RelayCommand(SetMailTo1Exe); }
+        }
+
+        private void SetMailToAllExe()
+        {
+            ToAll = true;
+            GetAllAddrs();
+            GetPreYearAddrs();
+        }
+
+        public ICommand SetMailToAll
+        {
+            get { return new RelayCommand(SetMailToAllExe); }
+        }
+
+        private void SetMailToPreYearExe()
+        {
+            ToPreYear = true;
+            GetAllAddrs();
+            GetPreYearAddrs();
+        }
+
+        public ICommand SetMailToPreYear
+        {
+            get { return new RelayCommand(SetMailToPreYearExe); }
+        }
+
+        private void SetMailToContactExe()
+        {
+            ToAddr = SelectedContact.Email;
+        }
+
+        public ICommand SetMailToContact
+        {
+            get { return new RelayCommand(SetMailToContactExe); }
+        }
+
+        private void SendMailExe()
+        {
+            MailMessage message = new MailMessage();
+            message.From = new MailAddress(_fromAddr);
+
+            if(ToAll)
+            {
+                foreach (string addr in _allRecipientsList)
+                    message.To.Add(addr);
+
+                if(!ToAddr.Equals(""))
+                    message.To.Add(ToAddr);
+            }
+            else
+            {
+                if (ToPreYear)
+                {
+                    foreach (string addr in _preYearRecipientsList)
+                        message.To.Add(addr);
+
+                    if (!ToAddr.Equals(""))
+                        message.To.Add(ToAddr);
+                }
+                else
+                {
+                    if (!ToAddr.Equals(""))
+                        message.To.Add(ToAddr);
+                }
+            }
+
+            message.Subject = MailSubject;
+            message.Body = MailBody;
+
+            //_mailClient.Send(message);
+
+            ClearSendMailExe();
+
+        }
+
+        private bool CanSendMail()
+        {
+            if (!ToAll && !ToPreYear)
+                if (ToAddr.Equals(""))
+                    return false;
+                else
+                {
+                    try
+                    {
+                        var addr = new System.Net.Mail.MailAddress(ToAddr);
+                        return addr.Address == ToAddr;
+                    }
+                    catch
+                    {
+                        return false;
+                    }
+                    
+                }
+
+            if(!ToAddr.Equals(""))
+            {
+                try
+                {
+                    var addr = new System.Net.Mail.MailAddress(ToAddr);
+                    return addr.Address == ToAddr;
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+
+            return true;
+
+        }
+
+        public ICommand SendMail
+        {
+            get { return new RelayCommand(SendMailExe, CanSendMail); }
+        }
+
+        private void GetAllAddrs()
+        {
+            _allRecipientsList.Clear();
+
+            foreach(ContactModel contact in ContactList)
+            {
+                _allRecipientsList.Add(contact.Email);
+            }
+        }
+
+        private void GetPreYearAddrs()
+        {
+            _preYearRecipientsList.Clear();
+
+            foreach (ContactModel contact in ContactList)
+            {
+                if(contact.DidSend)
+                    _preYearRecipientsList.Add(contact.Email);
+            }
+        }
+
+        #endregion MailVM
     }
 }

@@ -25,7 +25,6 @@ namespace HolidayMailer
         public MainWindow()
         {
             InitializeComponent();
-            Console.WriteLine("asdfdsfsfasfasfsf");
         }
 
         private void letterTextBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -99,5 +98,54 @@ namespace HolidayMailer
             letterTextBox.IsEnabled = flag;
         }
 
+
+        private void sendMailContactBttn_Click(object sender, RoutedEventArgs e)
+        {
+            SetPeopleEnable(false);
+            sendMailGrid.Visibility = Visibility.Visible;
+
+        }
+
+        private void newMailBttn_Click(object sender, RoutedEventArgs e)
+        {
+            SetPeopleEnable(false);
+            sendMailGrid.Visibility = Visibility.Visible;
+        }
+
+        private void newMailAllBttn_Click(object sender, RoutedEventArgs e)
+        {
+            SetPeopleEnable(false);
+            sendMailGrid.Visibility = Visibility.Visible;
+        }
+
+        private void newMailPreYearBttn_Click(object sender, RoutedEventArgs e)
+        {
+            SetPeopleEnable(false);
+            sendMailGrid.Visibility = Visibility.Visible;
+        }
+
+        private void discardSendBttn_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBoxResult result = MessageBox.Show("Are you sure to discard the email?", "Discard", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+            if (result == MessageBoxResult.Yes)
+            {
+                bodyTextBox.Document = new FlowDocument();
+                sendMailGrid.Visibility = Visibility.Hidden;
+                SetPeopleEnable(true);
+                return;
+            }
+            else
+            {
+                return;
+            }
+        }
+
+        private void sendBttn_Click(object sender, RoutedEventArgs e)
+        {
+            bodyTemp.Text = RichTextBoxHelper.GetText(bodyTextBox.Document);
+            bodyTemp.GetBindingExpression(TextBox.TextProperty).UpdateSource();
+            sendMailGrid.Visibility = Visibility.Hidden;
+            SetPeopleEnable(true);
+        }
     }
 }
