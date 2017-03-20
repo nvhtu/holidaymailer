@@ -96,7 +96,13 @@ namespace HolidayMailer
             listView.IsEnabled = flag;
             sortComboBox.IsEnabled = flag;
             letterTextBox.IsEnabled = flag;
+
+            newContactMenuItem.IsEnabled = flag;
+            newMailMenuItem.IsEnabled = flag;
+            sendAllMenuItem.IsEnabled = flag;
+            sendPreMenuItem.IsEnabled = flag;
         }
+
 
 
         private void sendMailContactBttn_Click(object sender, RoutedEventArgs e)
@@ -147,5 +153,45 @@ namespace HolidayMailer
             sendMailGrid.Visibility = Visibility.Hidden;
             SetPeopleEnable(true);
         }
+
+        private void exitMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            if (ClosingClick())
+                Environment.Exit(0);
+            else
+                return;
+        }
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            if (ClosingClick())
+                Environment.Exit(0);
+            else
+                e.Cancel = true;
+        }
+
+
+        private bool ClosingClick()
+        {
+            if (sendMailGrid.Visibility == Visibility.Visible || editContactGrid.Visibility == Visibility.Visible)
+            {
+                MessageBoxResult result = MessageBox.Show("You still have unfinished data. Are you sure to exit the program?", "Exit", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                if (result == MessageBoxResult.Yes)
+                {
+                    return true;
+                }
+                else
+                    return false;
+            }
+            else
+                return true;
+
+        }
+
+        private void aboutMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show("Holiday Mailer" + Environment.NewLine + "Version: 1.0" + Environment.NewLine + "Features: Contact Manager, Send batch email, Email Attachment" + Environment.NewLine + "Tu Nguyen Final Project CSCD 371 Winter 2017", "About", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
     }
+
 }

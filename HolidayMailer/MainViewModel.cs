@@ -12,6 +12,7 @@ using System.Windows;
 using System.Net;
 using System.Net.Mail;
 using System.Windows.Documents;
+using System.IO;
 
 namespace HolidayMailer
 {
@@ -43,6 +44,8 @@ namespace HolidayMailer
         private SmtpClient _mailClient;
         private List<string> _allRecipientsList;
         private List<string> _preYearRecipientsList;
+        private bool _hasAttachment;
+        private string _attachFullPath;
 
         #endregion Mail members
 
@@ -69,14 +72,18 @@ namespace HolidayMailer
             _fromAddr = "prihaht@gmail.com";
             _toAddr = "";
             _mailBody = "";
+            _attachFullPath = "";
             _allRecipientsList = new List<string>();
             _preYearRecipientsList = new List<string>();
             GetAllAddrs();
             GetPreYearAddrs();
+            OnPropertyChanged("AttachEnable");
+            OnPropertyChanged("DeleteAttachEnable");
+
             _mailClient = new SmtpClient("smtp.gmail.com", 587)
             {
                 UseDefaultCredentials = false,
-                Credentials = new NetworkCredential(_fromAddr, "ht9xgoogle"),
+                Credentials = new NetworkCredential(_fromAddr, ""),
                 EnableSsl = true,
                 DeliveryMethod = SmtpDeliveryMethod.Network
             };
@@ -501,12 +508,53 @@ namespace HolidayMailer
             }
         }
 
+        public Visibility AttachEnable
+        {
+            get
+            {
+                if (_hasAttachment)
+                    return Visibility.Hidden;
+                else
+                    return Visibility.Visible;
+            }
+        }
+
+        public Visibility DeleteAttachEnable
+        {
+            get
+            {
+                if (!_hasAttachment)
+                    return Visibility.Hidden;
+                else
+                    return Visibility.Visible;
+            }
+        }
+
+        public string AttachFileName
+        {
+            get
+            {
+                if (_attachFullPath.Equals(""))
+                    return "";
+                else
+                    return _attachFullPath.Substring(_attachFullPath.LastIndexOf("\\")+1);
+            }
+            set
+            {
+                _attachFullPath = value;
+                OnPropertyChanged("AttachFileName");
+            }
+        }
+
         private void ClearSendMailExe()
         {
             ToAddr = "";
             MailSubject = "";
             MailBody = "";
-            
+            AttachFileName = "";
+            _hasAttachment = false;
+            OnPropertyChanged("AttachEnable");
+            OnPropertyChanged("DeleteAttachEnable");
         }
 
         public ICommand ClearSendMail
@@ -592,8 +640,9 @@ namespace HolidayMailer
 
             message.Subject = MailSubject;
             message.Body = MailBody;
+            message.Attachments.Add(new Attachment(_attachFullPath));
 
-            //_mailClient.Send(message);
+            _mailClient.Send(message);
 
             ClearSendMailExe();
 
@@ -638,6 +687,39 @@ namespace HolidayMailer
         public ICommand SendMail
         {
             get { return new RelayCommand(SendMailExe, CanSendMail); }
+        }
+
+        private void BrowseFileExe()
+        {
+            Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
+            Nullable<bool> result = dlg.ShowDialog();
+            if (result == true)
+            {
+                AttachFileName = dlg.FileName;
+                _hasAttachment = true;
+                OnPropertyChanged("AttachEnable");
+                OnPropertyChanged("DeleteAttachEnable");
+            }
+
+        }
+
+        public ICommand BrowseFile
+        {
+            get { return new RelayCommand(BrowseFileExe); }
+        }
+
+        private void DeleteAttachExe()
+        {
+            AttachFileName = "";
+            _hasAttachment = false;
+            OnPropertyChanged("AttachEnable");
+            OnPropertyChanged("DeleteAttachEnable");
+
+        }
+
+        public ICommand DeleteAttach
+        {
+            get { return new RelayCommand(DeleteAttachExe); }
         }
 
         private void GetAllAddrs()

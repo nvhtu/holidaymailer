@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:HolidayMailer"
         mc:Ignorable="d"
-        Title="MainWindow" Height="700" Width="630" MinWidth="630">
+        Title="MainWindow" Height="700" Width="630" MinWidth="630" Closing="Window_Closing">
 
     <Window.DataContext>
         <local:MainViewModel />
@@ -20,18 +20,18 @@
         </Grid.ColumnDefinitions>
         <Menu x:Name="menu" Height="23" VerticalAlignment="Top" Grid.ColumnSpan="2">
             <MenuItem x:Name="fileMenuItem" Header="File">
-                <MenuItem x:Name="exitMenuItem" Header="Exit"/>
+                <MenuItem x:Name="exitMenuItem" Header="Exit" Click="exitMenuItem_Click"/>
             </MenuItem>
             <MenuItem x:Name="peopleMenuItem" Header="People">
-                <MenuItem x:Name="newContactMenuItem" Header="New contact"/>
+                <MenuItem x:Name="newContactMenuItem" Header="New contact" Click="newContactTool_Click" Command="{Binding SetToCreateContact}"/>
             </MenuItem>
             <MenuItem x:Name="mailMenuItem" Header="Mail">
-                <MenuItem x:Name="newMailMenuItem" Header="New mail"/>
-                <MenuItem x:Name="sendAllMenuItem" Header="Send mail to All contacts"/>
-                <MenuItem x:Name="sendPreMenuItem" Header="Send mail previous years Senders"/>
+                <MenuItem x:Name="newMailMenuItem" Header="New mail" Click="newMailBttn_Click" Command="{Binding SetMailTo1}"/>
+                <MenuItem x:Name="sendAllMenuItem" Header="Send mail to All contacts"  Click="newMailAllBttn_Click" Command="{Binding SetMailToAll}"/>
+                <MenuItem x:Name="sendPreMenuItem" Header="Send mail previous years Senders" Click="newMailPreYearBttn_Click" Command="{Binding SetMailToPreYear}"/>
             </MenuItem>
             <MenuItem x:Name="helpMenuItem" Header="Help">
-                <MenuItem x:Name="aboutMenuItem" Header="About"/>
+                <MenuItem x:Name="aboutMenuItem" Header="About" Click="aboutMenuItem_Click"/>
             </MenuItem>
         </Menu>
         <GridSplitter x:Name="gridSplitter" HorizontalAlignment="Left" Margin="0,23,0,0" Width="9" Grid.Column="1" ResizeDirection="Columns"/>
@@ -42,13 +42,13 @@
         </ComboBox>
         <TextBox x:Name="letterTextBox" Height="22" Margin="0,108,10,0" TextWrapping="Wrap" VerticalAlignment="Top" HorizontalContentAlignment="Right" HorizontalAlignment="Right" Width="75" Text="{Binding LetterFilter, UpdateSourceTrigger=PropertyChanged}" TextChanged="letterTextBox_TextChanged" GotFocus="letterTextBox_GotFocus" PreviewMouseLeftButtonDown="SelectivelyIgnoreMouseButton" />
         <ListView x:Name="listView" Margin="10,154,10,10" ItemsSource="{Binding ContactListView}" SelectedItem="{Binding SelectedContact, Mode=OneWayToSource}" SelectionChanged="listView_SelectionChanged">
-            
+
         </ListView>
         <ToolBar x:Name="toolBar" Margin="0,23,0,0" VerticalAlignment="Top" Grid.ColumnSpan="2" Height="30">
-            <Button x:Name="newContactTool" Content="New Contact" Click="newContactTool_Click" Command="{Binding SetToCreateContact}"/>
-            <Button x:Name="newMailTool" Content="New Mail" Click="newMailBttn_Click" Command="{Binding SetMailTo1}"/>
-            <Button x:Name="newMailAllTool" Content="New Mail to All Contacts" Click="newMailAllBttn_Click" Command="{Binding SetMailToAll}"/>
-            <Button x:Name="newMailPreYearTool" Content="New Mail to Previous Year Senders" Click="newMailPreYearBttn_Click" Command="{Binding SetMailToPreYear}"/>
+            <Button x:Name="newContactTool" Content="New Contact" Click="newContactTool_Click" Command="{Binding SetToCreateContact}" Margin="0,0,20,0"/>
+            <Button x:Name="newMailTool" Content="New Mail" Click="newMailBttn_Click" Command="{Binding SetMailTo1}" Margin="0,0,20,0"/>
+            <Button x:Name="newMailAllTool" Content="New Mail to All Contacts" Click="newMailAllBttn_Click" Command="{Binding SetMailToAll}" Margin="0,0,20,0"/>
+            <Button x:Name="newMailPreYearTool" Content="New Mail to Previous Year Senders" Click="newMailPreYearBttn_Click" Command="{Binding SetMailToPreYear}" Margin="0,0,20,0"/>
         </ToolBar>
         <Grid x:Name="initBttnGrid" Grid.Column="1" Height="600" Margin="14,60,10,0" VerticalAlignment="Top">
             <Button x:Name="newMailBttn" Content="New Mail" Height="40" Margin="94,191,74,369" Width="200" Click="newMailBttn_Click" Command="{Binding SetMailTo1}"/>
@@ -100,12 +100,19 @@
             <CheckBox x:Name="preYearSendCheckBox" IsChecked="{Binding ToPreYear}" Content="People who sent holiday message previous years" HorizontalAlignment="Left" Margin="64,129,-14,0" VerticalAlignment="Top" FontSize="14" Width="327"/>
             <Label x:Name="subjectSendLabel" Content="Subject:" HorizontalAlignment="Left" Margin="0,153,0,0" VerticalAlignment="Top" FontSize="14"/>
             <TextBox x:Name="subjectSendTextBox" Text="{Binding MailSubject}" HorizontalAlignment="Left" Height="28" Margin="64,153,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="184" VerticalContentAlignment="Center" FontSize="14"/>
-            <RichTextBox x:Name="bodyTextBox" local:RichTextBoxHelper.Text="{Binding MailBody}" Margin="4,197,10,124"/>
+            <RichTextBox x:Name="bodyTextBox" Margin="4,197,10,124"/>
             <TextBox x:Name="bodyTemp" Text="{Binding MailBody}" Visibility="Hidden"/>
-            <Button x:Name="AttachSendBttn" Content="Attach" Margin="4,578,0,0" HorizontalAlignment="Left" Width="93"/>
-            <Button x:Name="sendBttn" Content="Send" Margin="0,578,98,0" Width="93" HorizontalAlignment="Right" Click="sendBttn_Click" Command="{Binding SendMail}"/>
-            <Button x:Name="discardSendBttn" Content="Discard" Margin="0,578,0,0" HorizontalAlignment="Right" Width="93" Click="discardSendBttn_Click" Command="{Binding ClearSendMail}"/>
-            <StackPanel x:Name="attachStack" HorizontalAlignment="Left" Height="44" Margin="6,529,0,0" VerticalAlignment="Top" Width="375"/>
+            <Button x:Name="attachSendBttn" Visibility="{Binding AttachEnable}" Command="{Binding BrowseFile}" Content="Attach" Margin="4,560,0,0" HorizontalAlignment="Left" Width="100" Height="22"/>
+            <Button x:Name="deleteAttachSendBttn" Visibility="{Binding DeleteAttachEnable}" Command="{Binding DeleteAttach}" Content="Delete Attach" Margin="4,560,0,0" HorizontalAlignment="Left" Width="100" Height="22"/>
+            <Button x:Name="sendBttn" Content="Send" Margin="0,569,98,9" Click="sendBttn_Click" Command="{Binding SendMail}" Height="22" HorizontalAlignment="Right" Width="93"/>
+            <Button x:Name="discardSendBttn" Content="Discard" Margin="0,569,0,9" Click="discardSendBttn_Click" Command="{Binding ClearSendMail}" Height="22" HorizontalAlignment="Right" Width="93"/>
+            <GroupBox Header="Attachment" Margin="4,496,10,42">
+                <Label Content="{Binding AttachFileName}" HorizontalAlignment="Left" Margin="0,10,-2,0" VerticalAlignment="Top" Height="29" Width="367"/>
+            </GroupBox>
+
+
+
+
 
         </Grid>
 
